@@ -1,14 +1,15 @@
-'''
+"""
 https://www-calipso.larc.nasa.gov/resources/calipso_users_guide/data_summaries/vfm/
 https://hdfeos.org/zoo/LaRC/CAL_LID_L2_VFM-ValStage1-V3-41.2021-11-29T23-32-39ZD.hdf.v.py
-'''
+"""
 
 import numpy as np
 import pandas as pd
 from pyhdf.SD import SD, SDC
 
+
 class VfmReader:
-    '''
+    """
     读取CALIPSO L2 VFM产品的类.
 
     Attributes
@@ -29,12 +30,13 @@ class VfmReader:
     fcf : (nrec, 545, 7) ndarray
         解码后的Feature_Classification_Flags.
         7对应于文档中7个字段的值.
-    '''
+    """
+
     def __init__(self, filepath):
         self.sd = SD(str(filepath), SDC.READ)
 
     def close(self):
-        '''关闭文件.'''
+        """关闭文件."""
         self.sd.end()
 
     def __enter__(self):
@@ -45,19 +47,19 @@ class VfmReader:
 
     @property
     def lon(self):
-        return self.sd.select('Longitude')[:, 0]
+        return self.sd.select("Longitude")[:, 0]
 
     @property
     def lat(self):
-        return self.sd.select('Latitude')[:, 0]
+        return self.sd.select("Latitude")[:, 0]
 
     @property
     def time(self):
         # 时间用浮点型的yymmdd.ffffffff表示.
-        yymmddff = self.sd.select('Profile_UTC_Time')[:, 0]
+        yymmddff = self.sd.select("Profile_UTC_Time")[:, 0]
         yymmdd = (yymmddff + 2e7).astype(int).astype(str)
-        yymmdd = pd.to_datetime(yymmdd, format='%Y%m%d')
-        ff = pd.to_timedelta(yymmddff % 1, unit='D')
+        yymmdd = pd.to_datetime(yymmdd, format="%Y%m%d")
+        ff = pd.to_timedelta(yymmddff % 1, unit="D")
         time = yymmdd + ff
 
         return time
@@ -74,7 +76,7 @@ class VfmReader:
     @property
     def fcf(self):
         # 三个高度层中都只选取第一条廓线来代表5km水平分辨率的FCF.
-        fcf = self.sd.select('Feature_Classification_Flags')[:]
+        fcf = self.sd.select("Feature_Classification_Flags")[:]
         fcf1 = fcf[:, 1165:1455]
         fcf2 = fcf[:, 165:365]
         fcf3 = fcf[:, 0:55]
